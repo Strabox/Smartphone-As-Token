@@ -8,8 +8,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth.Bluetooth;
 
 public class MainActivity extends AppCompatActivity {
+
+    private Bluetooth bluetooth;
+
+    public MainActivity(){
+        bluetooth = new Bluetooth(this);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,4 +58,11 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    public void buttonOnClick(View v){
+        Button b = (Button) v;
+        b.setText("Lol");
+        bluetooth.turnOnBluetooth();
+    }
+
 }
