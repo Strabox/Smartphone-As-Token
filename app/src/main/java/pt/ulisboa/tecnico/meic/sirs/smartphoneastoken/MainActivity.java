@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -64,5 +65,7 @@ public class MainActivity extends AppCompatActivity {
         b.setText("Lol");
         bluetooth.turnOnBluetooth();
     }
+
+
 
 }
