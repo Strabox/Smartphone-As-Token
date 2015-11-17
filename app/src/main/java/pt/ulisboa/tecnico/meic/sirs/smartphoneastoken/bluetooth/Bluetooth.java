@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -8,11 +9,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.ParcelUuid;
 
 import java.io.IOException;
-import java.security.KeyPair;
 import java.util.HashMap;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -20,55 +23,69 @@ import java.util.UUID;
  */
 public class Bluetooth {
 
+    public static final UUID uuid = UUID.fromString("00001115-0000-1000-8000-00805f9b34fb");
+
     private Activity currentActivity;
 
     private BluetoothAdapter adapter;
 
-    private HashMap<String,BluetoothDevice> nearDevices;
+    private List<BluetoothDevice> nearDevices;
 
-    public final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    /**
+     * Listener objects, receives asynchronous calls from discovering.
+     */
+    private final BroadcastReceiver bluetoothListener = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             // When discovery finds a device
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                nearDevices.put(device.getName(), device);
+                nearDevices.add(device);
+            }
+            else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
+                new AlertDialog.Builder(context).setTitle("Discovery Finished").setMessage("Woot").show();
             }
         }
     };
 
     public Bluetooth(Activity activity){
         this.currentActivity = activity;
-        nearDevices = new HashMap<String,BluetoothDevice>();
+        nearDevices = new LinkedList<BluetoothDevice>();
         adapter = BluetoothAdapter.getDefaultAdapter();
     }
 
-    public int getAllDevices(){
-        return nearDevices.size();
+    public void tryConnect(){
+        for (BluetoothDevice device : nearDevices){
+            System.out.println(device.getName());
+            ParcelUuid[] uuids = device.getUuids();
+            if(uuids != null) {
+                for (ParcelUuid u : uuids) {
+                    System.out.println(u);
+                    if(u.getUuid().equals(Bluetooth.uuid))
+                        new MakeClientConnection(device,Bluetooth.uuid).run();
+                }
+            }
+        }
     }
 
     public void turnOnBluetooth(){
-        Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        currentActivity.startActivityForResult(turnOn,0);
+        if (adapter.isEnabled()) {
+            adapter.disable();
+        }
+        else {
+            adapter.enable();
+        }
     }
 
     public void getNearDevice() throws InterruptedException {
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        currentActivity.registerReceiver(mReceiver, filter);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        currentActivity.registerReceiver(bluetoothListener, filter);
         nearDevices.clear();
         adapter.startDiscovery();
-        while (adapter.isDiscovering());
     }
-
-    public void connectToServer(String name) throws IOException {
-        BluetoothDevice device = nearDevices.get((String) name);
-        if(device == null)
-            return;
-        BluetoothSocket socket = device.createRfcommSocketToServiceRecord(new UUID(1111111111,1111111111));
-        socket.connect();
-    }
-
-
 
 }
