@@ -35,7 +35,6 @@ public class ManageClientConnection implements  Runnable{
     public void run(){
         byte[] buffer = new byte[1024];
         int bytes;
-
         // Keep listening to the InputStream until an exception occurs
         while (true) {
             try {
@@ -48,6 +47,7 @@ public class ManageClientConnection implements  Runnable{
                 break;
             }
         }
+        System.out.println("Connection Lost..");
     }
 
     /* Call this from the main activity to send data to the remote device */

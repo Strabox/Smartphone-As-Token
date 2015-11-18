@@ -19,22 +19,17 @@ public class MakeClientConnection implements Runnable{
         this.device = device;
         BluetoothSocket tempSocket = null;
         try {
-
             tempSocket = device.createRfcommSocketToServiceRecord(uuid);
-            System.out.println("Hmmmm");
         } catch (Exception e) {
             e.printStackTrace(); //TODO
         }
-
         socket = tempSocket;
     }
 
     @Override
     public void run(){
         try{
-            System.out.println("Here");
             socket.connect();
-            System.out.println("here22");
         }catch(IOException e){
             e.printStackTrace();
             try{
@@ -58,10 +53,8 @@ public class MakeClientConnection implements Runnable{
     /**
      * Main frame for the connection.
      */
-    public void manageConnection(BluetoothSocket socket){
-        System.out.println("Lul");
+    private void manageConnection(BluetoothSocket socket){
         ManageClientConnection conn = new ManageClientConnection(socket);
-        conn.run();
-        conn.write("Lol".getBytes());
+        Thread thread = new Thread(conn);
     }
 }

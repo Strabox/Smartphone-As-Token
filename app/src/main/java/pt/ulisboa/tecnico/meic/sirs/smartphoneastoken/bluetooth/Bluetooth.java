@@ -4,18 +4,15 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.ParcelUuid;
 
-import java.io.IOException;
-import java.util.HashMap;
+
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -23,7 +20,7 @@ import java.util.UUID;
  */
 public class Bluetooth {
 
-    public static final UUID uuid = UUID.fromString("00001115-0000-1000-8000-00805f9b34fb");
+    public static final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     private Activity currentActivity;
 
@@ -44,7 +41,7 @@ public class Bluetooth {
                 nearDevices.add(device);
             }
             else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
-                new AlertDialog.Builder(context).setTitle("Discovery Finished").setMessage("Woot").show();
+                new AlertDialog.Builder(context).setTitle("Discovery").setMessage("Discovery Finished").show();
             }
         }
     };
