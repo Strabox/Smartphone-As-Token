@@ -2,21 +2,27 @@ package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.os.Handler;
 
 import java.io.IOException;
 import java.util.UUID;
 
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
+
 /**
  * Created by André on 16-11-2015.
  */
-public class MakeClientConnection implements Runnable{
+public class MakeClientConnection extends Thread{
 
-    protected BluetoothDevice device;
+    private BluetoothDevice device;
 
-    protected BluetoothSocket socket;
+    private BluetoothSocket socket;
 
-    public MakeClientConnection(BluetoothDevice device,UUID uuid) {
+    private Client client;
+
+    public MakeClientConnection(BluetoothDevice device,UUID uuid,Client client) {
         this.device = device;
+        this.client = client;
         BluetoothSocket tempSocket = null;
         try {
             tempSocket = device.createRfcommSocketToServiceRecord(uuid);
@@ -39,22 +45,9 @@ public class MakeClientConnection implements Runnable{
             }
             return;
         }
-        manageConnection(socket);
+        ManageClientConnection conn = new ManageClientConnection(socket,client);
+        conn.start();
+        System.out.println("Connection Established");
     }
 
-    public void cancel(){
-        try{
-            socket.close();
-        }catch(IOException e){
-            e.printStackTrace(); //TODO
-        }
-    }
-
-    /**
-     * Main frame for the connection.
-     */
-    private void manageConnection(BluetoothSocket socket){
-        ManageClientConnection conn = new ManageClientConnection(socket);
-        Thread thread = new Thread(conn);
-    }
 }

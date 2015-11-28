@@ -1,7 +1,5 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -15,6 +13,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
+
 /**
  * Created by André on 27-10-2015.
  */
@@ -22,11 +23,12 @@ public class Bluetooth {
 
     public static final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    private Activity currentActivity;
+    private MainActivity currentActivity;
 
     private BluetoothAdapter adapter;
 
-    private List<BluetoothDevice> nearDevices;
+    private List<BluetoothDevice> nearDevicesWithService;
+
 
     /**
      * Listener objects, receives asynchronous calls from discovering.
@@ -36,37 +38,61 @@ public class Bluetooth {
             String action = intent.getAction();
             // When discovery finds a device
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                nearDevices.add(device);
+                ParcelUuid[] uuids =  device.getUuids();
+                if(uuids != null){
+                    for (ParcelUuid u : uuids) {
+                        System.out.println(u);
+                        if(u.getUuid().equals(Bluetooth.uuid)) //If device has our service running.
+                            nearDevicesWithService.add(device);
+                    }
+                }
             }
+            //When the discover is finished
             else if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
-                new AlertDialog.Builder(context).setTitle("Discovery").setMessage("Discovery Finished").show();
+                currentActivity.disableProgressBar();
+                currentActivity.registersDiscoverFinished();
             }
         }
     };
 
-    public Bluetooth(Activity activity){
+    public Bluetooth(MainActivity activity){
         this.currentActivity = activity;
-        nearDevices = new LinkedList<BluetoothDevice>();
+        nearDevicesWithService = new LinkedList<BluetoothDevice>();
         adapter = BluetoothAdapter.getDefaultAdapter();
+        adapter.isEnabled();
     }
 
-    public void tryConnect(){
-        for (BluetoothDevice device : nearDevices){
-            System.out.println(device.getName());
-            ParcelUuid[] uuids = device.getUuids();
-            if(uuids != null) {
-                for (ParcelUuid u : uuids) {
-                    System.out.println(u);
-                    if(u.getUuid().equals(Bluetooth.uuid))
-                        new MakeClientConnection(device,Bluetooth.uuid).run();
-                }
-            }
+
+
+    public synchronized String[] getDevicesNames(){
+        String[] array = new String[nearDevicesWithService.size()];
+        int i = 0;
+        for (BluetoothDevice device : nearDevicesWithService) {
+            array[i] = device.getName();
+            i++;
         }
+        return array;
     }
 
-    public void turnOnBluetooth(){
+    public void register(String deviceName,Client client){
+        BluetoothDevice deviceTemp = null;
+        for (BluetoothDevice device : nearDevicesWithService) {
+            if(device.getName().equals(deviceName))
+                deviceTemp = device;
+        }
+        new MakeClientConnection(deviceTemp,uuid,client).start();
+    }
+
+    public synchronized boolean getState(){
+        return adapter.isEnabled();
+    }
+
+    public String getAdapterMacAddress(){
+        return adapter.getAddress();
+    }
+
+    public synchronized void toggleBluetooth(){
         if (adapter.isEnabled()) {
             adapter.disable();
         }
@@ -81,8 +107,8 @@ public class Bluetooth {
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         currentActivity.registerReceiver(bluetoothListener, filter);
-        nearDevices.clear();
-        adapter.startDiscovery();
+        nearDevicesWithService.clear();
+        adapter.startDiscovery();       //Start discovery assynchronosly.
     }
 
 }
