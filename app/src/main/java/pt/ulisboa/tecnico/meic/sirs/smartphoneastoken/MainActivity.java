@@ -5,18 +5,28 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.Toast;
+import android.widget.ToggleButton;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth.Bluetooth;
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
 
-    private Bluetooth bluetooth;
+    private Client client;
 
     public MainActivity() {
-        bluetooth = new Bluetooth(this);
+        client = new Client(this);
     }
 
     @Override
@@ -26,6 +36,20 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        spinner.setVisibility(View.GONE);
+        spinner.setOnItemSelectedListener(this);
+        findViewById(R.id.progressBar).setVisibility(View.GONE);
+        findViewById(R.id.textView).setVisibility(View.GONE);
+
+        ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButton);
+        if(client.bluetooth.getState()){
+            toggle.setChecked(false);
+        }
+        else{
+            toggle.setChecked(true);
+        }
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -34,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
     }
 
     @Override
@@ -56,16 +81,52 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /*========================== GUI Events ==============================*/
+
+    public void disableProgressBar(){
+        findViewById(R.id.progressBar).setVisibility(View.GONE);
+    }
+
+    public void registersDiscoverFinished(){
+        Toast.makeText(this,"Found " + client.bluetooth.getDevicesNames().length + " registers",
+                Toast.LENGTH_LONG).show();
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_selectable_list_item);
+        adapter.add("Choose One");
+        adapter.addAll(client.bluetooth.getDevicesNames());
+        ((Spinner) findViewById(R.id.spinner)).setAdapter(adapter);
+        findViewById(R.id.textView).setVisibility(View.VISIBLE);
+        findViewById(R.id.spinner).setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> arg0){
+        //Do nothing
+    }
+
+    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+        // An item was selected. You can retrieve the selected item using
+        String selected = parent.getItemAtPosition(pos).toString();
+        if(!selected.equals("Choose One")) {
+            Toast.makeText(parent.getContext(), selected, Toast.LENGTH_SHORT).show();
+            client.bluetooth.register(selected,client);
+        }
+    }
+
+
+    /* ============================================================= */
+
     public void toggleBluetooth(View v){
-        bluetooth.turnOnBluetooth();
+        client.bluetooth.toggleBluetooth();
     }
 
-    public void buttonOnClick(View v) throws InterruptedException {
-        bluetooth.getNearDevice();
-    }
-
-    public void searchButtonOnClick(View v) throws InterruptedException {
-        bluetooth.tryConnect();
+    public void discoverOnClick(View v) throws InterruptedException {
+        if(client.bluetooth.getState()) {
+            client.bluetooth.getNearDevice();
+            findViewById(R.id.textView).setVisibility(View.GONE);
+            findViewById(R.id.spinner).setVisibility(View.GONE);
+            findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+        }
     }
 
 

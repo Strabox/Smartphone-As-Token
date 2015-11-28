@@ -1,15 +1,22 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
 import android.bluetooth.BluetoothSocket;
+import android.os.Handler;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
 
 /**
  * Created by André on 16-11-2015.
  */
-public class ManageClientConnection implements  Runnable{
+public class ManageClientConnection extends Thread{
 
     private final BluetoothSocket socket;
 
@@ -17,8 +24,11 @@ public class ManageClientConnection implements  Runnable{
 
     private final OutputStream out;
 
-    public ManageClientConnection(BluetoothSocket socket){
+    private final Client client;
+
+    public ManageClientConnection(BluetoothSocket socket,Client client){
         this.socket = socket;
+        this.client = client;
         InputStream inTemp = null;
         OutputStream outTemp = null;
         try{
@@ -33,34 +43,37 @@ public class ManageClientConnection implements  Runnable{
 
     @Override
     public void run(){
-        byte[] buffer = new byte[1024];
-        int bytes;
         // Keep listening to the InputStream until an exception occurs
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+
         while (true) {
             try {
-                // Read from the InputStream
-                bytes = in.read(buffer);
-                // Send the obtained bytes to the UI activity
-                //mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
-                //        .sendToTarget();
+                String line;
+                write(("1||"+ client.bluetooth.getAdapterMacAddress() +"\n").getBytes());
+
+                while ((line = reader.readLine()) != null){
+                    System.out.println(line);
+
+                }
+
             } catch (IOException e) {
                 break;
             }
         }
-        System.out.println("Connection Lost..");
+        cancel();
     }
 
-    /* Call this from the main activity to send data to the remote device */
     public void write(byte[] bytes) {
         try {
             out.write(bytes);
+            out.flush();
         } catch (IOException e) { }
     }
 
-    /* Call this from the main activity to shutdown the connection */
     public void cancel() {
         try {
             socket.close();
+            System.out.println("Connection Closed..");
         } catch (IOException e) { }
     }
 

@@ -13,32 +13,13 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Discover Devices"
+        android:text="Discover Registers"
         android:id="@+id/button"
         android:clickable="true"
         android:enabled="true"
-        android:onClick="buttonOnClick"
+        android:onClick="discoverOnClick"
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Near Devices"
-        android:id="@+id/textView"
-        android:textAlignment="center"
-        android:layout_below="@+id/button2"
-        android:layout_alignStart="@+id/button2" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Search Devices"
-        android:id="@+id/button2"
-        android:onClick="searchButtonOnClick"
-        android:layout_below="@+id/button"
-        android:layout_toEndOf="@+id/button"
-        android:layout_marginTop="34dp" />
+        android:layout_alignParentEnd="true" />
 
     <ToggleButton
         android:layout_width="wrap_content"
@@ -46,8 +27,33 @@
         android:text="New ToggleButton"
         android:id="@+id/toggleButton"
         android:onClick="toggleBluetooth"
-        android:layout_alignBaseline="@+id/textView"
-        android:layout_alignBottom="@+id/textView"
+        android:layout_alignParentTop="true"
+        android:checked="false" />
+
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner"
+        android:spinnerMode="dropdown"
+        android:clickable="false"
+        android:layout_below="@+id/textView"
         android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Registers found"
+        android:id="@+id/textView"
+        android:layout_below="@+id/progressBar"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="37dp" />
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:indeterminate="false"
+        android:layout_below="@+id/button"
+        android:layout_toStartOf="@+id/button" />
 
 </RelativeLayout>
