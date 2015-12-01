@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.ParcelUuid;
 
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;

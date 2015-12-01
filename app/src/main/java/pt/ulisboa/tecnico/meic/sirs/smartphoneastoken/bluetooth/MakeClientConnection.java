@@ -2,7 +2,6 @@ package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.Handler;
 
 import java.io.IOException;
 import java.util.UUID;

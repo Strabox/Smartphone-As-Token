@@ -1,17 +1,14 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
 import android.bluetooth.BluetoothSocket;
-import android.os.Handler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
-import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
 
 /**
  * Created by André on 16-11-2015.
@@ -26,6 +23,11 @@ public class ManageClientConnection extends Thread{
 
     private final Client client;
 
+    /**
+     * Default constructor
+     * @param socket
+     * @param client
+     */
     public ManageClientConnection(BluetoothSocket socket,Client client){
         this.socket = socket;
         this.client = client;
@@ -41,6 +43,9 @@ public class ManageClientConnection extends Thread{
         this.out = outTemp;
     }
 
+    /**
+     * Default run
+     */
     @Override
     public void run(){
         // Keep listening to the InputStream until an exception occurs
@@ -58,11 +63,17 @@ public class ManageClientConnection extends Thread{
 
             } catch (IOException e) {
                 break;
+            }catch (Exception e) {
+                break;
             }
         }
         cancel();
     }
 
+    /**
+     *
+     * @param bytes
+     */
     public void write(byte[] bytes) {
         try {
             out.write(bytes);
@@ -70,6 +81,9 @@ public class ManageClientConnection extends Thread{
         } catch (IOException e) { }
     }
 
+    /**
+     * Cancels
+     */
     public void cancel() {
         try {
             socket.close();
