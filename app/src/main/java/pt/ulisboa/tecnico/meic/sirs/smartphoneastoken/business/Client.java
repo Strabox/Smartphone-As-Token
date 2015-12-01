@@ -2,6 +2,8 @@ package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business;
 
 import java.security.Key;
 
+import javax.crypto.SecretKey;
+
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth.Bluetooth;
 
@@ -12,7 +14,7 @@ public class Client {
 
     public Bluetooth bluetooth;
 
-    private Key kek;
+    private SecretKey kek;
 
     private String id;
 
@@ -20,11 +22,11 @@ public class Client {
         this.bluetooth = new Bluetooth(activity);
     }
 
-    public Key getKek(){
+    public SecretKey getKek(){
         return kek;
     }
 
-    public void setKek(Key k){
+    public void setKek(SecretKey k){
         this.kek = k;
     }
 

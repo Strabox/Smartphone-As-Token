@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
@@ -51,34 +53,49 @@ public class ManageClientConnection extends Thread{
      */
     @Override
     public void run(){
-        // Keep listening to the InputStream until an exception occurs
         byte[] sentNonce = null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
         while (true) {
             try {
-                String line, hardcodedKek = "RANDOMkek";
-                write(("1||" + client.bluetooth.getAdapterMacAddress() + "\n").getBytes());
-                client.setKek(SecurityUtil.read(SecurityUtil.Hash(hardcodedKek)));
-
-                sentNonce = SecurityUtil.generateSecureRandom(1);
-                System.out.println("2||" + SecurityUtil.byteToBase64(sentNonce));
-                writer.write("2||" + SecurityUtil.byteToBase64(SecurityUtil.encrypt(sentNonce,client.getKek())) + "\n");
+                String line, hardcodedKek = "keka";
+                writer.write("1||" + client.bluetooth.getAdapterMacAddress() + "\n");
                 writer.flush();
-                System.out.println("Nonce sent");
+                client.setKek(SecurityUtil.getAesKeyFromBytes(SecurityUtil.Hash(hardcodedKek)));
+
+                sentNonce = SecurityUtil.generateSecureRandom(SecurityUtil.NONCE_BYTES_SIZE);
+                System.out.println("2||" + SecurityUtil.byteToBase64(sentNonce));
+                writer.write("2||" + SecurityUtil.byteToBase64(SecurityUtil.encrypt(sentNonce,client.getKek())));
+                writer.flush();
+
+                System.out.println("Challenge sent to laptop, waiting response....");
                 while ((line = reader.readLine()) != null){
-                    if(sentNonce.equals(SecurityUtil.base64ToByte(line)))
-                        System.out.println("FUCK YEA");
-                    else
-                        System.out.println("Nonce broken");
+                    String[] lines = line.split("\\|\\|");
+                    byte[] response = SecurityUtil.base64ToByte(lines[0]);
+                    byte[] challenge = SecurityUtil.base64ToByte(lines[1]);
+
+                    if(Arrays.equals(SecurityUtil.nonceTransformation(sentNonce),SecurityUtil.decrypt(response,client.getKek()))){
+                        System.out.println("Challenge response match sending my response");
+                        byte[] challengePlain = SecurityUtil.decrypt(challenge,client.getKek());
+                        byte[] challengeTransform = SecurityUtil.nonceTransformation(challengePlain);
+                        byte[] challengeEncrypted = SecurityUtil.encrypt(challengeTransform,client.getKek());
+                        writer.write("3||" + SecurityUtil.byteToBase64(challengeEncrypted) + "\n");
+                        writer.flush();
+                    }
+                    else{
+                        System.out.println("Wrong response Registration Failed");
+                        client.setKek(null);
+                        cancel();
+                        return;
+                    }
                 }
 
             } catch (IOException e) {
-                System.err.println("Excepção de IO esta treta morreu!!!!!!!!!!!!!!!!!!");
+                System.err.println("Excepção de IO esta treta morreu!!!");
                 e.printStackTrace();
                 break;
             }catch (Exception e) {
-                System.err.println("Outra excepção ainda mais inesperada!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.err.println("Outra excepção ainda mais inesperada!!!");
                 e.printStackTrace();
                 break;
             }
