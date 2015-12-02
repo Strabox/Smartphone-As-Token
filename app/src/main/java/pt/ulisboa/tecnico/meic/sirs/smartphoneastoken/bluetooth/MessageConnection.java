@@ -11,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.security.Security;
 import java.util.Arrays;
 
 import javax.crypto.SecretKey;
@@ -46,13 +47,35 @@ public class MessageConnection extends ManageClientConnection{
         while (true) {
             try {
                 byte[] sessionKeyBytes = SecurityUtil.generateRandomAESKey();
+                byte[] challengeSent = SecurityUtil.generateSecureRandom(SecurityUtil.NONCE_BYTES_SIZE);
                 sessionKey = SecurityUtil.getAesKeyFromBytes(sessionKeyBytes);
                 writer.write(MESSAGE_ID + "||1||" + client.bluetooth.getAdapterMacAddress() + "||" +
                         SecurityUtil.byteToBase64(SecurityUtil.encrypt(sessionKeyBytes, client.getKek())) + "||" +
-                        SecurityUtil.byteToBase64(SecurityUtil.encrypt(SecurityUtil.generateSecureRandom(SecurityUtil.NONCE_BYTES_SIZE), sessionKey))+"\n");
+                        SecurityUtil.byteToBase64(SecurityUtil.encrypt(challengeSent, sessionKey))+"\n");
                 writer.flush();
-                while ((line = reader.readLine()) != null){
 
+                while ((line = reader.readLine()) != null){
+                    String lines[] = line.split("\\|\\|");
+                    byte[] responseEncrypted = SecurityUtil.base64ToByte(lines[1]);
+                    byte[] responseDecrypted = SecurityUtil.decrypt(responseEncrypted,sessionKey);
+                    byte[] challengeEncrypted = SecurityUtil.base64ToByte(lines[2]);
+                    byte[] challengeDecrypted = SecurityUtil.decrypt(challengeEncrypted, sessionKey);
+                    byte[] challengeTransformation = SecurityUtil.nonceTransformation(challengeDecrypted);
+                    byte[] challengeTransformationEcnrypted = SecurityUtil.encrypt(challengeTransformation,sessionKey);
+                    if(Arrays.equals(responseDecrypted,SecurityUtil.nonceTransformation(challengeSent))){
+                        System.out.println("Challenge correct");
+                        if(client.getFileKey() == null){
+                            client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
+                        }
+                        byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(),sessionKey);
+                        writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(challengeTransformationEcnrypted) + "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "\n");
+                        writer.flush();
+                    }
+                    else{
+                        System.out.println("Boom wrong challenge");
+                        cancel();
+                        return;
+                    }
                 }
             } catch (IOException e) {
                 System.err.println("Excepção de IO esta treta morreu!!!");
