@@ -55,26 +55,36 @@ public class MessageConnection extends ManageClientConnection{
                 writer.flush();
 
                 while ((line = reader.readLine()) != null){
+                    System.out.println(line);
                     String lines[] = line.split("\\|\\|");
-                    byte[] responseEncrypted = SecurityUtil.base64ToByte(lines[1]);
-                    byte[] responseDecrypted = SecurityUtil.decrypt(responseEncrypted,sessionKey);
-                    byte[] challengeEncrypted = SecurityUtil.base64ToByte(lines[2]);
-                    byte[] challengeDecrypted = SecurityUtil.decrypt(challengeEncrypted, sessionKey);
-                    byte[] challengeTransformation = SecurityUtil.nonceTransformation(challengeDecrypted);
-                    byte[] challengeTransformationEcnrypted = SecurityUtil.encrypt(challengeTransformation,sessionKey);
-                    if(Arrays.equals(responseDecrypted,SecurityUtil.nonceTransformation(challengeSent))){
-                        System.out.println("Challenge correct");
-                        if(client.getFileKey() == null){
-                            client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
-                        }
-                        byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(),sessionKey);
-                        writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(challengeTransformationEcnrypted) + "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "\n");
+                    if(lines[0].equals("PING")){
+                        byte[] ping = SecurityUtil.base64ToByte(lines[1]);
+                        byte[] pingDecrypted = SecurityUtil.decrypt(ping,sessionKey);
+                        byte[] pingTransformation = SecurityUtil.nonceTransformation(pingDecrypted);
+                        byte[] pingTransformationEncrypted = SecurityUtil.encrypt(pingTransformation,sessionKey);
+                        writer.write(MESSAGE_ID + "||3||" + SecurityUtil.byteToBase64(pingTransformationEncrypted) + "\n");
                         writer.flush();
-                    }
-                    else{
-                        System.out.println("Boom wrong challenge");
-                        cancel();
-                        return;
+                    }else{
+                        byte[] responseEncrypted = SecurityUtil.base64ToByte(lines[1]);
+                        byte[] responseDecrypted = SecurityUtil.decrypt(responseEncrypted,sessionKey);
+                        byte[] challengeEncrypted = SecurityUtil.base64ToByte(lines[2]);
+                        byte[] challengeDecrypted = SecurityUtil.decrypt(challengeEncrypted, sessionKey);
+                        byte[] challengeTransformation = SecurityUtil.nonceTransformation(challengeDecrypted);
+                        byte[] challengeTransformationEcnrypted = SecurityUtil.encrypt(challengeTransformation,sessionKey);
+                        if(Arrays.equals(responseDecrypted,SecurityUtil.nonceTransformation(challengeSent))){
+                            System.out.println("Challenge correct");
+                            if(client.getFileKey() == null){
+                                client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
+                            }
+                            byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(),sessionKey);
+                            writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(challengeTransformationEcnrypted) + "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "\n");
+                            writer.flush();
+                        }
+                        else{
+                            System.out.println("Boom wrong challenge");
+                            cancel();
+                            return;
+                        }
                     }
                 }
             } catch (IOException e) {
