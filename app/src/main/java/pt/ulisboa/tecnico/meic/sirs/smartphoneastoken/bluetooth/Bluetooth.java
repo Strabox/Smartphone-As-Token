@@ -28,6 +28,8 @@ public class Bluetooth {
 
     private List<BluetoothDevice> nearDevicesWithService;
 
+    private List<BluetoothDevice> connectedDevicesWithService;
+
 
     /**
      * Listener objects, receives asynchronous calls from discovering.
@@ -58,6 +60,7 @@ public class Bluetooth {
     public Bluetooth(MainActivity activity){
         this.currentActivity = activity;
         nearDevicesWithService = new LinkedList<BluetoothDevice>();
+        connectedDevicesWithService = new LinkedList<BluetoothDevice>();
         adapter = BluetoothAdapter.getDefaultAdapter();
         adapter.isEnabled();
     }
@@ -80,7 +83,7 @@ public class Bluetooth {
             if(device.getName().equals(deviceName))
                 deviceTemp = device;
         }
-        new MakeClientConnection(currentActivity, deviceTemp,uuid,client).start();
+        new MakeClientConnection(currentActivity, deviceTemp,uuid,client, RegisterConnection.class.getName()).start();
     }
 
     public synchronized boolean getState(){
@@ -110,4 +113,16 @@ public class Bluetooth {
         adapter.startDiscovery();       //Start discovery assynchronosly.
     }
 
+    public BluetoothDevice getConnectedDeviceByName(String deviceName){
+        for (BluetoothDevice b: connectedDevicesWithService){
+            if(b.getName().equals(deviceName)){
+                return b;
+            }
+        }
+        return null;
+    }
+
+    public void addConnectedDevice(BluetoothDevice bdv){
+        connectedDevicesWithService.add(bdv);
+    }
 }

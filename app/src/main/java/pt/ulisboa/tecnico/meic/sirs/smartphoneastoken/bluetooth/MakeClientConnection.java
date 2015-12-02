@@ -22,10 +22,15 @@ public class MakeClientConnection extends Thread{
 
     private MainActivity currentActivity;
 
-    public MakeClientConnection(MainActivity activity, BluetoothDevice device,UUID uuid,Client client) {
+    private String targetClass = "";
+
+
+
+    public MakeClientConnection(MainActivity activity, BluetoothDevice device,UUID uuid,Client client, String targetClassName) {
         this.currentActivity = activity;
         this.device = device;
         this.client = client;
+        this.targetClass = targetClassName;
         BluetoothSocket tempSocket = null;
         try {
             tempSocket = device.createRfcommSocketToServiceRecord(uuid);
@@ -48,7 +53,12 @@ public class MakeClientConnection extends Thread{
             }
             return;
         }
-        ManageClientConnection conn = new ManageClientConnection(this.currentActivity,socket,client);
+        ManageClientConnection conn;
+        if (targetClass.equals(MessageConnection.class.getName())) {
+            conn = new MessageConnection(this.currentActivity, socket, client);
+        } else {
+            conn = new RegisterConnection(this.currentActivity, socket, client, device);
+        }
         conn.start();
         System.out.println("Connection Established");
     }

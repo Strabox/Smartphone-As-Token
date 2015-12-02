@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,6 +15,9 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth.Bluetooth;
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth.MakeClientConnection;
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth.MessageConnection;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
@@ -33,9 +37,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         Spinner spinner = (Spinner) findViewById(R.id.spinner);
         spinner.setVisibility(View.GONE);
+        Spinner spinner2 = (Spinner) findViewById(R.id.spinner2);
+        spinner2.setVisibility(View.GONE);
         spinner.setOnItemSelectedListener(this);
         findViewById(R.id.progressBar).setVisibility(View.GONE);
         findViewById(R.id.textView).setVisibility(View.GONE);
+        findViewById(R.id.textView2).setVisibility(View.GONE);
 
         ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButton);
         if(client.bluetooth.getState()){
@@ -84,11 +91,34 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         findViewById(R.id.spinner).setVisibility(View.VISIBLE);
     }
 
+    public void successRegistration(BluetoothDevice btd){
+        Toast.makeText(this,"Connected to " + btd.getName(), Toast.LENGTH_LONG).show();
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_selectable_list_item);
+        adapter.add("Devices:");
+        adapter.addAll(btd.getName());
+        ((Spinner) findViewById(R.id.spinner2)).setAdapter(adapter);
+        findViewById(R.id.textView2).setVisibility(View.VISIBLE);
+        findViewById(R.id.spinner2).setVisibility(View.VISIBLE);
+        client.bluetooth.addConnectedDevice(btd);
+    }
+
+    public void connectToLaptop(View v){
+        String deviceName = ((Spinner)findViewById(R.id.spinner2)).getSelectedItem().toString();
+        if(!deviceName.equals("Devices:")){
+            BluetoothDevice device = client.bluetooth.getConnectedDeviceByName(deviceName);
+            if(device != null){
+                new MakeClientConnection(this,device, Bluetooth.uuid,client,MessageConnection.class.getName()).start();
+            }
+        }
+    }
+
     @Override
     public void onNothingSelected(AdapterView<?> arg0){
         //Do nothing
     }
 
+    @Override
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
         // An item was selected. You can retrieve the selected item using
         String selected = parent.getItemAtPosition(pos).toString();

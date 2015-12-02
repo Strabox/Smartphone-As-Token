@@ -16,18 +16,28 @@ public class Client {
 
     private SecretKey kek;
 
+    private SecretKey fileKey;
+
     private String id;
 
-    public Client(MainActivity activity){
+    public Client(MainActivity activity) {
         this.bluetooth = new Bluetooth(activity);
     }
 
-    public SecretKey getKek(){
+    public SecretKey getKek() {
         return kek;
     }
 
-    public void setKek(SecretKey k){
+    public void setKek(SecretKey k) {
         this.kek = k;
+    }
+
+    public SecretKey getFileKey() {
+        return fileKey;
+    }
+
+    public void setFileKey(SecretKey k) {
+        this.fileKey = k;
     }
 
 }
