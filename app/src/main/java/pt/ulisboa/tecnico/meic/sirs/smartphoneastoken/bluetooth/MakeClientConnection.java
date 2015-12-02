@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothSocket;
 import java.io.IOException;
 import java.util.UUID;
 
+import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 
 /**
@@ -19,7 +20,10 @@ public class MakeClientConnection extends Thread{
 
     private Client client;
 
-    public MakeClientConnection(BluetoothDevice device,UUID uuid,Client client) {
+    private MainActivity currentActivity;
+
+    public MakeClientConnection(MainActivity activity, BluetoothDevice device,UUID uuid,Client client) {
+        this.currentActivity = activity;
         this.device = device;
         this.client = client;
         BluetoothSocket tempSocket = null;
@@ -44,7 +48,7 @@ public class MakeClientConnection extends Thread{
             }
             return;
         }
-        ManageClientConnection conn = new ManageClientConnection(socket,client);
+        ManageClientConnection conn = new ManageClientConnection(this.currentActivity,socket,client);
         conn.start();
         System.out.println("Connection Established");
     }

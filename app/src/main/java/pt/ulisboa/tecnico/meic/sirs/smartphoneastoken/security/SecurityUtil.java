@@ -87,7 +87,7 @@ public abstract class SecurityUtil {
     }
 
     public static String byteToBase64(byte[] bytes){
-        return Base64.encodeToString(bytes,Base64.DEFAULT);
+        return Base64.encodeToString(bytes,Base64.NO_WRAP);
     }
 
 

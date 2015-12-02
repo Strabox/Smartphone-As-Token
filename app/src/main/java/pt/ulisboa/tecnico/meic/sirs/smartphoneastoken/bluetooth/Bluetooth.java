@@ -80,7 +80,7 @@ public class Bluetooth {
             if(device.getName().equals(deviceName))
                 deviceTemp = device;
         }
-        new MakeClientConnection(deviceTemp,uuid,client).start();
+        new MakeClientConnection(currentActivity, deviceTemp,uuid,client).start();
     }
 
     public synchronized boolean getState(){
