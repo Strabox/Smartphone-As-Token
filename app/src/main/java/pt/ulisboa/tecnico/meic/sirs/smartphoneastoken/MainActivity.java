@@ -102,11 +102,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         findViewById(R.id.textView2).setVisibility(View.VISIBLE);
         findViewById(R.id.spinner2).setVisibility(View.VISIBLE);
         client.bluetooth.addConnectedDevice(btd);
+        BluetoothDevice device = client.bluetooth.getConnectedDeviceByName(btd.getName());
+        if(device != null){
+            new MakeClientConnection(this,device, Bluetooth.uuid,client,MessageConnection.class.getName()).start();
+        }
     }
 
     public void connectToLaptop(View v){
-        String deviceName = ((Spinner)findViewById(R.id.spinner2)).getSelectedItem().toString();
-        if(!deviceName.equals("Devices:")){
+        String deviceName = ((Spinner)findViewById(R.id.spinner)).getSelectedItem().toString();
+        if(!deviceName.equals("Choose One")){
             BluetoothDevice device = client.bluetooth.getConnectedDeviceByName(deviceName);
             if(device != null){
                 new MakeClientConnection(this,device, Bluetooth.uuid,client,MessageConnection.class.getName()).start();
