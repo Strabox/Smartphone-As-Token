@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -24,7 +23,7 @@ import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
  */
 public class RegisterConnection extends  ManageClientConnection {
 
-    private static final String MESSAGE_ID = "**REGISTER_STAGE**";
+    private static final String PHASE_ID = "**REGISTER_PHASE**";
     /**
      * Default constructor
      *
@@ -44,13 +43,13 @@ public class RegisterConnection extends  ManageClientConnection {
             try {
                 String line;
                // hardcodedKek = SecurityUtil.byteToBase64(SecurityUtil.generateSecureRandom(8));
-                hardcodedKek = "kek";
+                final String kek = "kek";
                 Handler h = new Handler(Looper.getMainLooper());
                 h.post(new Runnable() {
                     public void run() {
                         AlertDialog alertDialog = new AlertDialog.Builder(currentActivity).create();
                         alertDialog.setTitle("Insert kek in target Desktop");
-                        alertDialog.setMessage(hardcodedKek);
+                        alertDialog.setMessage(kek);
                         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "DONE",
                                 new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int which) {
@@ -60,13 +59,13 @@ public class RegisterConnection extends  ManageClientConnection {
                         alertDialog.show();
                     }
                 });
-                writer.write(MESSAGE_ID + "||1||" + client.bluetooth.getAdapterMacAddress() + "\n");
+                writer.write(PHASE_ID + "||1||" + client.bluetooth.getAdapterMacAddress() + "\n");
                 writer.flush();
-                client.setKek(SecurityUtil.getAesKeyFromBytes(SecurityUtil.Hash(hardcodedKek)));
+                client.setKek(SecurityUtil.getAesKeyFromBytes(SecurityUtil.Hash(kek)));
 
                 sentNonce = SecurityUtil.generateSecureRandom(SecurityUtil.NONCE_BYTES_SIZE);
-                System.out.println(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(sentNonce));
-                writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(SecurityUtil.encrypt(sentNonce, client.getKek())) + "\n");
+                System.out.println(PHASE_ID + "||2||" + SecurityUtil.byteToBase64(sentNonce));
+                writer.write(PHASE_ID + "||2||" + SecurityUtil.byteToBase64(SecurityUtil.encrypt(sentNonce, client.getKek())) + "\n");
                 writer.flush();
 
                 System.out.println("Challenge sent to laptop, waiting response....");
@@ -80,9 +79,12 @@ public class RegisterConnection extends  ManageClientConnection {
                         byte[] challengePlain = SecurityUtil.decrypt(challenge,client.getKek());
                         byte[] challengeTransform = SecurityUtil.nonceTransformation(challengePlain);
                         byte[] challengeEncrypted = SecurityUtil.encrypt(challengeTransform,client.getKek());
-                        writer.write(MESSAGE_ID + "||3||" + SecurityUtil.byteToBase64(challengeEncrypted) + "\n");
+
+                        client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
+                        byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(),client.getKek());
+                        writer.write(PHASE_ID + "||3||" + SecurityUtil.byteToBase64(challengeEncrypted) +
+                                "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "\n");
                         writer.flush();
-                        cancel();
                         //// TODO: 02/12/2015  Missing Server ack
                         currentActivity.runOnUiThread(
                                 new Runnable() {
@@ -92,6 +94,7 @@ public class RegisterConnection extends  ManageClientConnection {
                                     }
                                 }
                         );
+                        cancel();
                         return;
                     } else {
                         System.out.println("Wrong response Registration Failed");
@@ -103,11 +106,9 @@ public class RegisterConnection extends  ManageClientConnection {
 
             } catch (IOException e) {
                 System.err.println("Excepção de IO esta treta morreu!!!");
-                e.printStackTrace();
                 break;
             }catch (Exception e) {
                 System.err.println("Outra excepção ainda mais inesperada!!!");
-                e.printStackTrace();
                 break;
             }
         }

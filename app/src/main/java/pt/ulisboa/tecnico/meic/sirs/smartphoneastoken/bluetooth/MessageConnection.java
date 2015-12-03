@@ -25,7 +25,7 @@ import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
  */
 public class MessageConnection extends ManageClientConnection{
 
-    private static final String MESSAGE_ID = "**MESSAGE_STAGE**";
+    private static final String MESSAGE_ID = "**PING_PHASE**";
 
     /**
      * Default constructor

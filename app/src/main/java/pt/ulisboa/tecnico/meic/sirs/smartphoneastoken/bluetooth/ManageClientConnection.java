@@ -27,9 +27,6 @@ public abstract class ManageClientConnection extends Thread{
 
     protected BluetoothDevice device;
 
-    protected String hardcodedKek = "";
-
-
     /**
      * Default constructor
      * @param socket
