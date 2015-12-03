@@ -1,5 +1,6 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -45,11 +46,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         findViewById(R.id.textView2).setVisibility(View.GONE);
 
         ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButton);
-        if(client.bluetooth.getState()){
-            toggle.setChecked(false);
+        if(BluetoothAdapter.getDefaultAdapter().isEnabled()){
+            toggle.setChecked(true);
         }
         else{
-            toggle.setChecked(true);
+            toggle.setChecked(false);
         }
     }
 
@@ -122,9 +123,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
         // An item was selected. You can retrieve the selected item using
         String selected = parent.getItemAtPosition(pos).toString();
-        if(!selected.equals("Choose One")) {
+        if (!selected.equals("Choose One")) {
             Toast.makeText(parent.getContext(), selected, Toast.LENGTH_SHORT).show();
-            client.bluetooth.register(selected,client);
+            client.bluetooth.register(selected, client);
+            findViewById(R.id.button2).setVisibility(View.VISIBLE);
         }
     }
 
