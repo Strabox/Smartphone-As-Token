@@ -1,17 +1,12 @@
 package pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth;
 
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothSocket;
-import android.content.DialogInterface;
-import android.os.Handler;
-import android.os.Looper;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.security.Security;
 import java.util.Arrays;
 
 import javax.crypto.SecretKey;
@@ -26,6 +21,8 @@ import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
 public class MessageConnection extends ManageClientConnection{
 
     private static final String MESSAGE_ID = "**PING_PHASE**";
+
+    private static final String PING = "PING";
 
     /**
      * Default constructor
@@ -51,13 +48,13 @@ public class MessageConnection extends ManageClientConnection{
                 sessionKey = SecurityUtil.getAesKeyFromBytes(sessionKeyBytes);
                 writer.write(MESSAGE_ID + "||1||" + client.bluetooth.getAdapterMacAddress() + "||" +
                         SecurityUtil.byteToBase64(SecurityUtil.encrypt(sessionKeyBytes, client.getKek())) + "||" +
-                        SecurityUtil.byteToBase64(SecurityUtil.encrypt(challengeSent, sessionKey))+"\n");
+                        SecurityUtil.byteToBase64(SecurityUtil.encrypt(challengeSent, sessionKey)) + "\n");
                 writer.flush();
 
                 while ((line = reader.readLine()) != null){
                     System.out.println(line);
                     String lines[] = line.split("\\|\\|");
-                    if(lines[0].equals("PING")){
+                    if(lines[0].equals(PING)){
                         byte[] ping = SecurityUtil.base64ToByte(lines[1]);
                         byte[] pingDecrypted = SecurityUtil.decrypt(ping,sessionKey);
                         byte[] pingTransformation = SecurityUtil.nonceTransformation(pingDecrypted);
@@ -70,29 +67,30 @@ public class MessageConnection extends ManageClientConnection{
                         byte[] challengeEncrypted = SecurityUtil.base64ToByte(lines[2]);
                         byte[] challengeDecrypted = SecurityUtil.decrypt(challengeEncrypted, sessionKey);
                         byte[] challengeTransformation = SecurityUtil.nonceTransformation(challengeDecrypted);
-                        byte[] challengeTransformationEcnrypted = SecurityUtil.encrypt(challengeTransformation,sessionKey);
+                        byte[] challengeTransformationEncrypted = SecurityUtil.encrypt(challengeTransformation,sessionKey);
                         if(Arrays.equals(responseDecrypted,SecurityUtil.nonceTransformation(challengeSent))){
                             System.out.println("Challenge correct");
                             if(client.getFileKey() == null){
                                 client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
                             }
+                            byte[] fileKeyMac = SecurityUtil.encrypt(SecurityUtil.hashBytes(client.getFileKey().getEncoded()),sessionKey);
                             byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(),sessionKey);
-                            writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(challengeTransformationEcnrypted) + "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "\n");
+                            writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(challengeTransformationEncrypted)
+                                    + "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "||" +
+                                    SecurityUtil.byteToBase64(fileKeyMac) + "\n");
                             writer.flush();
                         }
                         else{
-                            System.out.println("Boom wrong challenge");
+                            System.out.println("Wrong challenge response aborting..");
                             cancel();
                             return;
                         }
                     }
                 }
             } catch (IOException e) {
-                System.err.println("Excepção de IO esta treta morreu!!!");
                 e.printStackTrace();
                 break;
             }catch (Exception e) {
-                System.err.println("Outra excepção ainda mais inesperada!!!");
                 e.printStackTrace();
                 break;
             }

@@ -42,7 +42,7 @@ public class RegisterConnection extends  ManageClientConnection {
         while (true) {
             try {
                 String line;
-               // hardcodedKek = SecurityUtil.byteToBase64(SecurityUtil.generateSecureRandom(8));
+                // TODO kek = SecurityUtil.byteToBase64(SecurityUtil.generateSecureRandom(8));
                 final String kek = "kek";
                 Handler h = new Handler(Looper.getMainLooper());
                 h.post(new Runnable() {
@@ -61,7 +61,7 @@ public class RegisterConnection extends  ManageClientConnection {
                 });
                 writer.write(PHASE_ID + "||1||" + client.bluetooth.getAdapterMacAddress() + "\n");
                 writer.flush();
-                client.setKek(SecurityUtil.getAesKeyFromBytes(SecurityUtil.Hash(kek)));
+                client.setKek(SecurityUtil.getAesKeyFromBytes(SecurityUtil.hashString(kek)));
 
                 sentNonce = SecurityUtil.generateSecureRandom(SecurityUtil.NONCE_BYTES_SIZE);
                 System.out.println(PHASE_ID + "||2||" + SecurityUtil.byteToBase64(sentNonce));
@@ -79,11 +79,12 @@ public class RegisterConnection extends  ManageClientConnection {
                         byte[] challengePlain = SecurityUtil.decrypt(challenge,client.getKek());
                         byte[] challengeTransform = SecurityUtil.nonceTransformation(challengePlain);
                         byte[] challengeEncrypted = SecurityUtil.encrypt(challengeTransform,client.getKek());
-
                         client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
                         byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(),client.getKek());
+                        byte[] fileKeyMac = SecurityUtil.encrypt(SecurityUtil.hashBytes(client.getFileKey().getEncoded()),client.getKek());
                         writer.write(PHASE_ID + "||3||" + SecurityUtil.byteToBase64(challengeEncrypted) +
-                                "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "\n");
+                                "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "||"+
+                                SecurityUtil.byteToBase64(fileKeyMac) + "\n");
                         writer.flush();
                         //// TODO: 02/12/2015  Missing Server ack
                         currentActivity.runOnUiThread(
@@ -105,10 +106,12 @@ public class RegisterConnection extends  ManageClientConnection {
                 }
 
             } catch (IOException e) {
-                System.err.println("Excepção de IO esta treta morreu!!!");
+                client.setKek(null);
+                e.printStackTrace();
                 break;
             }catch (Exception e) {
-                System.err.println("Outra excepção ainda mais inesperada!!!");
+                client.setKek(null);
+                e.printStackTrace();
                 break;
             }
         }

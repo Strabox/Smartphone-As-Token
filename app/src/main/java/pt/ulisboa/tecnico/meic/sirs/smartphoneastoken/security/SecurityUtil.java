@@ -68,10 +68,16 @@ public abstract class SecurityUtil {
         return new SecretKeySpec(key, 0, 16, AES);
     }
 
-    public static byte[] Hash(String input) throws NoSuchAlgorithmException,
+    public static byte[] hashString(String input) throws NoSuchAlgorithmException,
             UnsupportedEncodingException{
         MessageDigest digest = MessageDigest.getInstance(SHA256);
         return digest.digest(input.getBytes(UTF8));
+    }
+
+    public static byte[] hashBytes(byte[] bytes)throws NoSuchAlgorithmException,
+            UnsupportedEncodingException{
+        MessageDigest digest = MessageDigest.getInstance(SHA256);
+        return digest.digest(bytes);
     }
 
     public static byte[] nonceTransformation(byte[] bytes){
