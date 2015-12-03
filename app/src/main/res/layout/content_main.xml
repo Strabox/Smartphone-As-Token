@@ -11,7 +11,7 @@
 
     <Button
         style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
+        android:layout_width="175dp"
         android:layout_height="wrap_content"
         android:text="Discover Registers"
         android:id="@+id/button"
@@ -57,13 +57,14 @@
         android:layout_toStartOf="@+id/button" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="175dp"
         android:layout_height="wrap_content"
         android:text="Connect"
         android:id="@+id/button2"
         android:layout_alignTop="@+id/progressBar"
         android:layout_alignEnd="@+id/button"
         android:layout_toEndOf="@+id/progressBar"
+        android:layout_below="@+id/button"
         android:onClick="connectToLaptop" />
 
     <TextView
