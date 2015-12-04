@@ -58,30 +58,52 @@ public class MessageConnection extends ManageClientConnection{
                         byte[] ping = SecurityUtil.base64ToByte(lines[1]);
                         byte[] pingDecrypted = SecurityUtil.decrypt(ping,sessionKey);
                         byte[] pingTransformation = SecurityUtil.nonceTransformation(pingDecrypted);
-                        byte[] pingTransformationEncrypted = SecurityUtil.encrypt(pingTransformation,sessionKey);
+                        byte[] pingTransformationEncrypted = SecurityUtil.encrypt(pingTransformation, sessionKey);
                         writer.write(MESSAGE_ID + "||3||" + SecurityUtil.byteToBase64(pingTransformationEncrypted) + "\n");
                         writer.flush();
-                    }else{
+                    }else if(lines.length == 5){
                         byte[] responseEncrypted = SecurityUtil.base64ToByte(lines[1]);
                         byte[] responseDecrypted = SecurityUtil.decrypt(responseEncrypted,sessionKey);
                         byte[] challengeEncrypted = SecurityUtil.base64ToByte(lines[2]);
                         byte[] challengeDecrypted = SecurityUtil.decrypt(challengeEncrypted, sessionKey);
+
+                        byte[] timeStampEncrypted = SecurityUtil.base64ToByte(lines[3]);
+                        byte[] timeStampDecrypted = SecurityUtil.decrypt(timeStampEncrypted,sessionKey);
+                        byte[] hashtimeStampEncrypted = SecurityUtil.base64ToByte(lines[4]);
+                        byte[] hashtimeStampDecrypted = SecurityUtil.decrypt(hashtimeStampEncrypted, sessionKey);
+
                         byte[] challengeTransformation = SecurityUtil.nonceTransformation(challengeDecrypted);
                         byte[] challengeTransformationEncrypted = SecurityUtil.encrypt(challengeTransformation,sessionKey);
-                        if(Arrays.equals(responseDecrypted,SecurityUtil.nonceTransformation(challengeSent))){
-                            System.out.println("Challenge correct");
-                            if(client.getFileKey() == null){
+                        if (Arrays.equals(hashtimeStampDecrypted, SecurityUtil.hashBytes(timeStampDecrypted))) {
+                            if (Arrays.equals(responseDecrypted, SecurityUtil.nonceTransformation(challengeSent))) {
+                                System.out.println("Challenge correct");
+                                if (client.getFileKey() == null) {
+                                    client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
+                                }
+                                byte[] fileKeyMac = SecurityUtil.encrypt(SecurityUtil.hashBytes(client.getFileKey().getEncoded()), sessionKey);
+                                byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(), sessionKey);
+
+                                //new Kfile
                                 client.setFileKey(SecurityUtil.getAesKeyFromBytes(SecurityUtil.generateRandomAESKey()));
+                                byte[] newEncryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(), sessionKey);
+                                byte[] newFileKeyMac = SecurityUtil.encrypt(SecurityUtil.hashBytes(client.getFileKey().getEncoded()), sessionKey);
+
+                                writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(challengeTransformationEncrypted)
+                                        + "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "||" +
+                                        SecurityUtil.byteToBase64(fileKeyMac) + "||" +
+                                        SecurityUtil.byteToBase64(newEncryptedFileKey) + "||" +
+                                        SecurityUtil.byteToBase64(newFileKeyMac) + "||" +
+                                        lines[3] + "||" +
+                                        lines[4] + "||" +
+                                        "\n");
+                                writer.flush();
+                            } else {
+                                System.out.println("Wrong challenge response aborting..");
+                                cancel();
+                                return;
                             }
-                            byte[] fileKeyMac = SecurityUtil.encrypt(SecurityUtil.hashBytes(client.getFileKey().getEncoded()),sessionKey);
-                            byte[] encryptedFileKey = SecurityUtil.encrypt(client.getFileKey().getEncoded(),sessionKey);
-                            writer.write(MESSAGE_ID + "||2||" + SecurityUtil.byteToBase64(challengeTransformationEncrypted)
-                                    + "||" + SecurityUtil.byteToBase64(encryptedFileKey) + "||" +
-                                    SecurityUtil.byteToBase64(fileKeyMac) + "\n");
-                            writer.flush();
-                        }
-                        else{
-                            System.out.println("Wrong challenge response aborting..");
+                        }else{
+                            System.out.println("TimeStamp tampering, aborting..");
                             cancel();
                             return;
                         }

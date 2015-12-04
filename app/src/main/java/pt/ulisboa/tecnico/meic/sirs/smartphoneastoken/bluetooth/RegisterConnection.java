@@ -48,7 +48,7 @@ public class RegisterConnection extends  ManageClientConnection {
                 h.post(new Runnable() {
                     public void run() {
                         AlertDialog alertDialog = new AlertDialog.Builder(currentActivity).create();
-                        alertDialog.setTitle("Insert kek in target Desktop");
+                        alertDialog.setTitle("Insert kek in " + device.getAddress());
                         alertDialog.setMessage(kek);
                         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "DONE",
                                 new DialogInterface.OnClickListener() {
