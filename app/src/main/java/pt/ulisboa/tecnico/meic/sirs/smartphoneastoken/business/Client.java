@@ -7,9 +7,7 @@ import javax.crypto.SecretKey;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.bluetooth.Bluetooth;
 
-/**
- * Created by André on 26-11-2015.
- */
+
 public class Client {
 
     public Bluetooth bluetooth;

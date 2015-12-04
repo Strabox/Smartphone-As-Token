@@ -18,9 +18,7 @@ import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
 
-/**
- * Created by fcma on 02/12/2015.
- */
+
 public class RegisterConnection extends  ManageClientConnection {
 
     private static final String PHASE_ID = "**REGISTER_PHASE**";

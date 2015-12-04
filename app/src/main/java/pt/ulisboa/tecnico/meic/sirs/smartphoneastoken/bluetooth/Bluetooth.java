@@ -15,9 +15,7 @@ import java.util.UUID;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 
-/**
- * Created by André on 27-10-2015.
- */
+
 public class Bluetooth {
 
     public static final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");

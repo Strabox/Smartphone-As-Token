@@ -15,9 +15,7 @@ import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.security.SecurityUtil;
 
-/**
- * Created by fcma on 02/12/2015.
- */
+
 public class MessageConnection extends ManageClientConnection{
 
     private static final String MESSAGE_ID = "**PING_PHASE**";

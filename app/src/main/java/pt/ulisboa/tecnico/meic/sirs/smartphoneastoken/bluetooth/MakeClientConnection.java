@@ -9,9 +9,7 @@ import java.util.UUID;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 
-/**
- * Created by André on 16-11-2015.
- */
+
 public class MakeClientConnection extends Thread{
 
     private BluetoothDevice device;

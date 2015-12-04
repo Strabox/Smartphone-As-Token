@@ -10,9 +10,7 @@ import java.io.OutputStream;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.MainActivity;
 import pt.ulisboa.tecnico.meic.sirs.smartphoneastoken.business.Client;
 
-/**
- * Created by André on 16-11-2015.
- */
+
 public abstract class ManageClientConnection extends Thread{
 
     protected final BluetoothSocket socket;

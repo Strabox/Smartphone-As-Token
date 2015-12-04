@@ -19,9 +19,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-/**
- * Created by André on 26-11-2015.
- */
+
 public abstract class SecurityUtil {
 
     public static int NONCE_BYTES_SIZE = 6;
