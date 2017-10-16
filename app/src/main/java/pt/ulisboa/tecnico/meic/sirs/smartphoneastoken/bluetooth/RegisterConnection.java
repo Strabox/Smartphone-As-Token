@@ -40,8 +40,8 @@ public class RegisterConnection extends  ManageClientConnection {
         while (true) {
             try {
                 String line;
-                // TODO kek = SecurityUtil.byteToBase64(SecurityUtil.generateSecureRandom(8));
-                final String kek = "kek";
+                final String kek = SecurityUtil.byteToBase64(SecurityUtil.generateSecureRandom(8));
+                //final String kek = "kek";
                 Handler h = new Handler(Looper.getMainLooper());
                 h.post(new Runnable() {
                     public void run() {
